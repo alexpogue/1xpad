@@ -13,8 +13,8 @@ void printFileError(char *file, char *rights);
 int main(int argc, char *argv[]) {
     char *execName = argv[0];
 
-    if (argc < 3) {
-        fprintf(stderr, "Usage: %s [-g <key length>] [<key file> <in file> <out file>]\n", execName);
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s [-g <key length>] [<key file>]\n", execName);
         return 1;
     }
 
@@ -52,49 +52,40 @@ int main(int argc, char *argv[]) {
     else {
         FILE *keyFile, *messageFile, *outFile;
         unsigned long messageLen;
-        if (argc < 3) {
-            fprintf(stderr, "Usage: %s <key file> <in file>\n", execName);
+        if (argc < 2) {
+            fprintf(stderr, "Usage: %s <key file>\n", execName);
             return 1;
         }
 
         keyFile = fopen(argv[1], "rb");
         if (!keyFile) printFileError(argv[1], "read");
-        messageFile = fopen(argv[2], "rb");
-        if (!messageFile) printFileError(argv[2], "read");
+        messageFile = stdin;
+        if (!messageFile) printFileError("stdin", "read");
         outFile = stdout;
+        if (!outFile) printFileError("stdout", "write");
 
         if (!keyFile || !messageFile || !outFile) {
             if (keyFile) fclose(keyFile);
-            if (messageFile) fclose(messageFile);
             return 1;
         }
 
-        messageLen = getFileSize(messageFile);
-        if (messageLen > getFileSize(keyFile)) {
-            fprintf(stderr, "Error: message is longer than key\n");
-            return 1;
-        }
-
-        while (messageLen--) {
-            char resultChar = (char)(fgetc(messageFile) ^ fgetc(keyFile));
+        int messageChar;
+        while ((messageChar = fgetc(messageFile)) != EOF) {
+            int keyChar = fgetc(keyFile);
+            if (keyChar == EOF) {
+                fprintf(stderr, "Error: message is longer than key\n");
+                break;
+            }
+            char resultChar = (char)(messageChar ^ keyChar);
             fwrite(&resultChar, 1, 1, outFile);
         }
         fclose(keyFile);
-        fclose(messageFile);
     }
     return 0;
 }
 
 void printFileError(char *fileName, char *permission) {
     fprintf(stderr, "Error: couldn't open %s with %s permission\n", fileName, permission);
-}
-
-unsigned long getFileSize(FILE *fp) {
-    unsigned long size;
-    fseek(fp, 0, SEEK_END);
-    size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    return size;
 }
 
 int strToUlong(unsigned long *val, char *str) {

@@ -12,4 +12,6 @@ Redirect stdout to a file to save the output.
 
 ### Encrypt/decrypt a message:
 
-`./1xpad keyfile messagefile`
+Input is via stdin, output is stdout
+
+`./1xpad keyfile`

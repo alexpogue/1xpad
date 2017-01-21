@@ -12,28 +12,18 @@ void printFileError(char *file, char *rights);
 
 int main(int argc, char *argv[]) {
     char *execName = argv[0];
-    char *outFileName = argv[3];
 
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s [-g <key length>] [<key file> <in file> <out file>]", execName);
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s [-g <key length>] [<key file> <in file> <out file>]\n", execName);
         return 1;
     }
 
     if (argv[1][0] == '-' && argv[1][1] == 'g') {
-        FILE *outFile;
+        FILE *outFile = stdout;
         unsigned long keySizeMb;
         char *keySizeMbStr = argv[2];
         int intsPerMb, numIntsInKey, maxIntsInChunk, intsInFirstChunk, *chunk;
         chunk = NULL;
-        if (argc < 4) {
-            fprintf(stderr, "Usage: %s -g <key length>\n", execName);
-            return 1;
-        }
-        outFile = fopen(outFileName, "wb");
-        if (!outFile) {
-            printFileError(outFileName, "write");
-            return 1;
-        }
         if (!strToUlong(&keySizeMb, keySizeMbStr)) {
             fprintf(stderr, "Error: Couldn't interpret %s as unsigned long\n", keySizeMbStr);
             return 1;
@@ -58,13 +48,12 @@ int main(int argc, char *argv[]) {
             numIntsInKey -= numIntsInChunk;
         }
         free(chunk);
-        fclose(outFile);
     }
     else {
         FILE *keyFile, *messageFile, *outFile;
         unsigned long messageLen;
-        if (argc < 4) {
-            fprintf(stderr, "Usage: %s <key file> <in file> <out file>\n", execName);
+        if (argc < 3) {
+            fprintf(stderr, "Usage: %s <key file> <in file>\n", execName);
             return 1;
         }
 
@@ -72,13 +61,11 @@ int main(int argc, char *argv[]) {
         if (!keyFile) printFileError(argv[1], "read");
         messageFile = fopen(argv[2], "rb");
         if (!messageFile) printFileError(argv[2], "read");
-        outFile = fopen(argv[3], "wb");
-        if (!outFile) printFileError(argv[3], "write");
+        outFile = stdout;
 
         if (!keyFile || !messageFile || !outFile) {
             if (keyFile) fclose(keyFile);
             if (messageFile) fclose(messageFile);
-            if (outFile) fclose(outFile);
             return 1;
         }
 
@@ -94,7 +81,6 @@ int main(int argc, char *argv[]) {
         }
         fclose(keyFile);
         fclose(messageFile);
-        fclose(outFile);
     }
     return 0;
 }

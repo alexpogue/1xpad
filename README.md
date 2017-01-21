@@ -4,9 +4,9 @@
 
 # Usage
 
-Redirect stdout to a file to save the output.
-
 ### Generating a key:
+
+Output via stdout.
 
 `./1xpad -g <key_size_in_mb>`
 
